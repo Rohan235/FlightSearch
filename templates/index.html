@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Upload</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        #loading {
+            display: none;
+        }
+           .chip {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            color: #ecad21;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            background-color: #f8f6f6;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto;
+            height: 100px;
+        }
+        #upload-form {
+
+            border-radius: 10px;
+            {#padding: 20px;#}
+            background-color: #f8f9fa;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-input-label {
+            display: inline-block;
+            border: 2px solid #ecad21;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #fff;
+            font-weight: bold;
+            color: #6a5a06;
+        }
+        .file-input-label:hover {
+            background-color: #e9ecef;
+        }
+        .file-input-label img {
+            margin-right: 10px;
+        }
+        .sub-text {
+            width: 100%;
+            text-align: center;
+            margin-top: 10px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body style="background-color: #f8f6f6;">
+    <div class="container mt-0">
+        <img src="/static/Logo.png" alt="Logo" class="logo mb-4">
+        <form id="upload-form">
+            <div class="form-group">
+                <div class="file-input-container">
+                    <input type="file" class="file-input" id="file-input" required>
+                    <label for="file-input" class="file-input-label">
+                        <img src="https://img.icons8.com/material-rounded/24/007bff/upload.png" alt="Upload Icon">
+                        CHOOSE FILES
+                    </label>
+                </div>
+            </div>
+        </form>
+        <div id="loading" class="text-center mt-3">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p>Loading flights...</p>
+        </div>
+        <div id="output" class="mt-3"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#file-input').on('change', function() {
+                var fileInput = $('#file-input')[0].files[0];
+                if (!fileInput) {
+                    alert('Please select a file!');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('file', fileInput);
+
+                $('#loading').show();
+                $('#output').html('');
+
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#loading').hide();
+                        $('#output').html(generateOutput(response));
+                    },
+                    error: function(response) {
+                        $('#loading').hide();
+                        alert('Error uploading file.');
+                    }
+                });
+            });
+
+            function generateOutput(data) {
+    var output = '';
+
+    // Morning Flights
+    output += '<h2>Morning Flights (' + data.morning_flights_count + ' Flights)</h2>';
+    output += generateTable(data.morning_flights);
+
+    // Afternoon Flights
+    output += '<h2>Afternoon Flights (' + data.afternoon_flights_count + ' Flights)</h2>';
+    output += generateTable(data.afternoon_flights);
+
+    // Evening Flights
+    output += '<h2>Evening Flights (' + data.evening_flights_count + ' Flights)</h2>';
+    output += generateTable(data.evening_flights);
+
+    // Late Night Flights
+    output += '<h2>Late Night Flights (' + data.night_flights_count + ' Flights)</h2>';
+    output += generateTable(data.night_flights);
+
+    // Total Flights
+    output += '<h2 class="text-center">Total Flights: ' + data.total_flights + '</h2>';
+
+    return output;
+}
+
+
+            function generateTable(flights) {
+                if (!flights.length) return '<p>No flights available.</p>';
+
+                var table = '<table class="table table-bordered">';
+                table += '<thead><tr><th>Flight Number</th><th>Name</th><th>Fare</th><th>Departure</th><th>Arrival</th><th>Duration</th><th>Fare Type</th></thead>';
+                table += '<tbody>';
+                flights.forEach(function(flight) {
+                    table += '<tr>';
+                    table += '<td>' + flight.flight_number + '</td>';
+                    table += '<td>' + flight.airline_name + '</td>';
+                    table += '<td>₹ ' + flight.total_fare + '</td>';
+                    table += '<td><img src="/static/departure.png" alt="Departure" width="24"> ' + flight.departure_time + '</td>';
+                    table += '<td><img src="/static/arrival.png" alt="Arrival" width="24"> ' + flight.arrival_time + '</td>';
+                    table += '<td><img src="/static/duration.png" alt="Duration" width="24"> ' + flight.duration + '</td>';
+                    table += '<td><span class="chip">PUBLISHED</span></td>';
+                    table += '</tr>';
+                });
+                table += '</tbody></table>';
+
+                return table;
+            }
+        });
+    </script>
+</body>
+</html>
