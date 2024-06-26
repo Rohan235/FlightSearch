@@ -19,12 +19,12 @@ def format_duration(duration):
     hours, minutes = divmod(duration, 60)
     return f"{hours}h {minutes}min"
 
-# Function to filter and sort flights by departure time range and fare
+# Function to filter and sort flights by departure time range and departure time
 def filter_and_sort_flights(flights, start_hour, end_hour):
     filtered_flights = [
         flight for flight in flights.values() if start_hour <= flight['departure_dt'].hour < end_hour
     ]
-    return sorted(filtered_flights, key=lambda x: (x['total_fare'], x['departure_dt']))
+    return sorted(filtered_flights, key=lambda x: x['departure_dt'])
 
 # Function to process the uploaded file
 def process_file(file_content):
